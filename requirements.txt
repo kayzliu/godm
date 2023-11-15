@@ -1,8 +1,4 @@
-xgboost
-pyod
-scikit-learn
-sympy
-pandas
-catboost
-bidict
-openpyxl
+tqdm
+numpy
+pygod
+torch_geometric
