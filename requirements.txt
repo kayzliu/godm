@@ -1,0 +1,8 @@
+xgboost
+pyod
+scikit-learn
+sympy
+pandas
+catboost
+bidict
+openpyxl

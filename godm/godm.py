@@ -1,3 +1,4 @@
+import os
 import tqdm
 import math
 import time
@@ -24,7 +25,8 @@ class VGAE(nn.Module):
             temporal=True,
             t_min=0,
             t_max=1024,
-            etypes=1
+            etypes=1,
+            threshold=0.5
     ):
         super(VGAE, self).__init__()
         self.in_dim = in_dim
@@ -34,6 +36,7 @@ class VGAE(nn.Module):
         self.t_max = t_max
         self.time_len = self.t_max - self.t_min + 1 if temporal else None
         self.etypes = etypes
+        self.threshold = threshold
         self.enc_shared = SAGEConv(in_dim, hid_dim, temporal=temporal,
                                    time_len=self.time_len, etypes=etypes)
         self.enc_mu = SAGEConv(hid_dim, hid_dim, temporal=temporal,
@@ -91,7 +94,7 @@ class VGAE(nn.Module):
         ze = torch.cat((z1, z2), dim=2)
 
         adj = torch.sigmoid(self.dec_stru(ze)).squeeze(-1)
-        edge_index = (adj > 0.5).nonzero().T
+        edge_index = (adj > self.threshold).nonzero().T
         edge_index = add_self_loops(edge_index, num_nodes=z.size(0))[0]
 
         pos_ze = torch.cat([z[edge_index[0]], z[edge_index[1]]], dim=1)
@@ -107,6 +110,7 @@ class VGAE(nn.Module):
 
 class GODM(BaseTransform):
     def __init__(self,
+                 name=None,
                  hid_dim=None,
                  diff_dim=None,
                  vae_epochs=100,
@@ -115,6 +119,7 @@ class GODM(BaseTransform):
                  lr=0.001,
                  wd=0.,
                  batch_size=2048,
+                 threshold=0.75,
                  we=.5,
                  beta=1e-3,
                  wt=1.,
@@ -124,6 +129,7 @@ class GODM(BaseTransform):
                  gen_nodes=None,
                  device=0):
 
+        self.name = name
         self.hid_dim = hid_dim
         self.diff_dim = diff_dim
         self.vae_epochs = vae_epochs
@@ -132,6 +138,7 @@ class GODM(BaseTransform):
         self.lr = lr
         self.wd = wd
         self.batch_size = batch_size
+        self.threshold = threshold
         self.we = we
         self.beta = beta
         self.time_attr = time_attr
@@ -162,26 +169,30 @@ class GODM(BaseTransform):
         dataloader = ClusterLoader(cluster_data, batch_size=1, shuffle=True,
                                    num_workers=4)
 
+        if not os.path.exists('ckpt'):
+            os.mkdir('ckpt')
+
         self.ae = VGAE(
             data.num_node_features,
             self.hid_dim,
             temporal=self.temporal,
             t_min=self.t_min,
             t_max=self.t_max,
-            etypes=self.etypes
+            etypes=self.etypes,
+            threshold=self.threshold
         ).to(self.device)
 
         self.train_ae(dataloader)
-        # torch.save(self.ae, 'ckpt/ae.pt')
-        self.ae = torch.load('ckpt/ae.pt')
+        # torch.save(self.ae, 'ckpt/' + self.name + '_ae.pt')
+        self.ae = torch.load('ckpt/' + self.name + '_ae.pt')
 
         denoise_fn = MLPDiffusion(self.hid_dim, self.diff_dim).to(self.device)
         self.dm = Model(denoise_fn=denoise_fn,
                         hid_dim=self.hid_dim).to(self.device)
 
         self.train_dm(dataloader)
-        # torch.save(self.ae, 'ckpt/dm.pt')
-        self.dm = torch.load('ckpt/dm.pt')
+        # torch.save(self.ae, 'ckpt/' + self.name + '_dm.pt')
+        self.dm = torch.load('ckpt/' + self.name + '_dm.pt')
 
         gen_gs = []
         gen_nodes = self.gen_nodes
@@ -195,6 +206,7 @@ class GODM(BaseTransform):
         aug_data = Batch.from_data_list([data] + gen_gs)
 
         self.postprocess(aug_data)
+        torch.save(aug_data, 'ckpt/' + self.name + '_aug_data.pt')
 
         return aug_data
 
@@ -219,7 +231,7 @@ class GODM(BaseTransform):
 
         if not hasattr(data, self.time_attr):
             self.temporal = False
-            self.beta = 0.
+            self.wt = 0.
 
         if hasattr(data, self.type_attr):
             self.etypes = getattr(data, self.type_attr).unique().size(0)
@@ -408,8 +420,7 @@ class GODM(BaseTransform):
         loss += self.we * F.binary_cross_entropy_with_logits(edge_pred,
                                                              edge_label)
         if self.temporal:
-            t /= (self.t_max - self.t_min)
-            loss += self.wt * F.mse_loss(t_, t)
+            loss += self.wt * F.mse_loss(t_, t / (self.t_max - self.t_min))
         if self.etypes > 1:
             loss += self.wp * F.cross_entropy(p_, p)
         return torch.mean(loss)
