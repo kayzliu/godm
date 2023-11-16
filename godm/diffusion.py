@@ -115,15 +115,15 @@ class GEGLU(nn.Module):
         return geglu(x)
 
 
-class FourierEmbedding(torch.nn.Module):
-    def __init__(self, num_channels, scale=16):
-        super().__init__()
-        self.register_buffer('freqs', torch.randn(num_channels // 2) * scale)
-
-    def forward(self, x):
-        x = x.ger((2 * np.pi * self.freqs).to(x.dtype))
-        x = torch.cat([x.cos(), x.sin()], dim=1)
-        return x
+# class FourierEmbedding(torch.nn.Module):
+#     def __init__(self, num_channels, scale=16):
+#         super().__init__()
+#         self.register_buffer('freqs', torch.randn(num_channels // 2) * scale)
+#
+#     def forward(self, x):
+#         x = x.ger((2 * np.pi * self.freqs).to(x.dtype))
+#         x = torch.cat([x.cos(), x.sin()], dim=1)
+#         return x
 
 
 class MLPDiffusion(nn.Module):
@@ -217,7 +217,6 @@ class Model(nn.Module):
         return loss.mean(-1).mean()
 
 
-num_steps = 50
 SIGMA_MIN = 0.002
 SIGMA_MAX = 80
 rho = 7
@@ -251,7 +250,7 @@ def sample_step(net, num_steps, i, t_cur, t_next, x_next, y):
     return x_next
 
 
-def sample_dm(net, noise, label):
+def sample_dm(net, noise, label, num_steps):
     step_indices = torch.arange(num_steps, dtype=torch.float32,
                                 device=noise.device)
 

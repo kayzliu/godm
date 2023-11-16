@@ -127,6 +127,7 @@ class GODM(BaseTransform):
                  type_attr='edge_type',
                  wp=.3,
                  gen_nodes=None,
+                 sample_steps=50,
                  device=0):
 
         self.name = name
@@ -148,6 +149,7 @@ class GODM(BaseTransform):
         self.etypes = 1
         self.wp = wp
         self.gen_nodes = gen_nodes
+        self.sample_steps = sample_steps
         self.device = pygod.utils.validate_device(device)
 
         self.ae = None
@@ -399,7 +401,7 @@ class GODM(BaseTransform):
         noise = torch.randn(graph_size, self.hid_dim).to(self.device)
         label = torch.ones(graph_size).unsqueeze(1).to(self.device)
 
-        z = sample_dm(net, noise, label)
+        z = sample_dm(net, noise, label, self.sample_steps)
         x_, edge_index, t_, p_ = self.ae.sample(z, label)
 
         data = Data(x=x_, edge_index=edge_index,
