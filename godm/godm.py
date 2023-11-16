@@ -164,7 +164,7 @@ class GODM(BaseTransform):
 
     def __call__(self, data):
         self.arg_parse(data)
-        self.preprocess(data)
+        data = self.preprocess(data)
 
         cluster_data = ClusterData(data,
                                    num_parts=data.num_nodes // self.batch_size)
@@ -207,7 +207,7 @@ class GODM(BaseTransform):
 
         aug_data = Batch.from_data_list([data] + gen_gs)
 
-        self.postprocess(aug_data)
+        aug_data = self.postprocess(aug_data)
         torch.save(aug_data, 'ckpt/' + self.name + '_aug_data.pt')
 
         return aug_data
@@ -262,6 +262,8 @@ class GODM(BaseTransform):
             self.t_min, self.t_max = edge_time.min(), edge_time.max()
             setattr(data, self.time_attr, (edge_time - self.t_min))
 
+        return data
+
     def postprocess(self, data):
         # denormalize
         data.x = data.x / self.std + self.mean
@@ -275,6 +277,8 @@ class GODM(BaseTransform):
         if self.temporal:
             edge_time = getattr(data, self.time_attr)
             setattr(data, self.time_attr, edge_time + self.t_min)
+
+        return data
 
     def train_ae(self, dataloader):
         optimizer = torch.optim.Adam(self.ae.parameters(),
@@ -329,7 +333,7 @@ class GODM(BaseTransform):
             if curr_loss < best_loss:
                 best_loss = curr_loss
                 patience = 0
-                torch.save(self.ae, 'ckpt/ae.pt')
+                torch.save(self.ae, 'ckpt/' + self.name + '_ae.pt')
             else:
                 patience += 1
                 if patience == self.patience:
@@ -386,7 +390,7 @@ class GODM(BaseTransform):
             if curr_loss < best_loss:
                 best_loss = curr_loss
                 patience = 0
-                torch.save(self.dm, 'ckpt/dm.pt')
+                torch.save(self.dm, 'ckpt/' + self.name + '_dm.pt')
             else:
                 patience += 1
                 if patience == self.patience:
