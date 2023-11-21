@@ -100,6 +100,7 @@ class VGAE(nn.Module):
         pos_ze = torch.cat([z[edge_index[0]], z[edge_index[1]]], dim=1)
         if self.temporal:
             t_ = self.dec_time(pos_ze).squeeze(-1)
+            t_ = torch.clamp(t_, min=0, max=1)
             t_ = t_ * (self.t_max - self.t_min)
         else:
             t_ = None
@@ -110,7 +111,7 @@ class VGAE(nn.Module):
 
 class GODM(BaseTransform):
     def __init__(self,
-                 name=None,
+                 name="",
                  hid_dim=None,
                  diff_dim=None,
                  vae_epochs=100,
@@ -128,7 +129,8 @@ class GODM(BaseTransform):
                  wp=.3,
                  gen_nodes=None,
                  sample_steps=50,
-                 device=0):
+                 device=0,
+                 verbose=False):
 
         self.name = name
         self.hid_dim = hid_dim
@@ -151,6 +153,7 @@ class GODM(BaseTransform):
         self.gen_nodes = gen_nodes
         self.sample_steps = sample_steps
         self.device = pygod.utils.validate_device(device)
+        self.verbose = verbose
 
         self.ae = None
         self.dm = None
@@ -185,16 +188,12 @@ class GODM(BaseTransform):
         ).to(self.device)
 
         self.train_ae(dataloader)
-        # torch.save(self.ae, 'ckpt/' + self.name + '_ae.pt')
-        self.ae = torch.load('ckpt/' + self.name + '_ae.pt')
 
         denoise_fn = MLPDiffusion(self.hid_dim, self.diff_dim).to(self.device)
         self.dm = Model(denoise_fn=denoise_fn,
                         hid_dim=self.hid_dim).to(self.device)
 
         self.train_dm(dataloader)
-        # torch.save(self.ae, 'ckpt/' + self.name + '_dm.pt')
-        self.dm = torch.load('ckpt/' + self.name + '_dm.pt')
 
         gen_gs = []
         gen_nodes = self.gen_nodes
@@ -266,7 +265,7 @@ class GODM(BaseTransform):
 
     def postprocess(self, data):
         # denormalize
-        data.x = data.x / self.std + self.mean
+        data.x = data.x * self.std + self.mean
 
         # recover edge type
         if self.etypes > 1:
@@ -344,6 +343,8 @@ class GODM(BaseTransform):
             print(f'Epoch: {epoch:03d}, Loss: {curr_loss:.6f}, '
                   f'Time: {epoch_t:.4f}')
 
+        self.ae = torch.load('ckpt/' + self.name + '_ae.pt')
+
     def train_dm(self, dataloader):
         optimizer = torch.optim.Adam(self.dm.parameters(), lr=self.lr,
                                      weight_decay=self.wd)
@@ -353,7 +354,7 @@ class GODM(BaseTransform):
         self.dm.train()
         best_loss = float('inf')
         patience = 0
-        start_time = time.time()
+        # start_time = time.time()
         for epoch in range(self.diff_epochs):
             pbar = tqdm.tqdm(dataloader, total=len(dataloader))
             pbar.set_description(f"Epoch {epoch}")
@@ -397,15 +398,20 @@ class GODM(BaseTransform):
                     print('Early stopping')
                     break
 
-        end_time = time.time()
-        print('Time: ', end_time - start_time)
+        if self.diff_epochs > 0:
+            self.dm = torch.load('ckpt/' + self.name + '_dm.pt')
+        # end_time = time.time()
+        # print('Time: ', end_time - start_time)
 
     def sample(self, model, graph_size):
         net = model.denoise_fn_D
         noise = torch.randn(graph_size, self.hid_dim).to(self.device)
         label = torch.ones(graph_size).unsqueeze(1).to(self.device)
 
-        z = sample_dm(net, noise, label, self.sample_steps)
+        if self.sample_steps > 0:
+            z = sample_dm(net, noise, label, self.sample_steps)
+        else:
+            z = noise
         x_, edge_index, t_, p_ = self.ae.sample(z, label)
 
         data = Data(x=x_, edge_index=edge_index,
@@ -422,11 +428,17 @@ class GODM(BaseTransform):
 
     def recon_loss(self, x, x_, edge_label, edge_pred,
                    t=None, t_=None, p=None, p_=None):
-        loss = F.mse_loss(x_, x)
-        loss += self.we * F.binary_cross_entropy_with_logits(edge_pred,
-                                                             edge_label)
+        loss_x = F.mse_loss(x_, x)
+        loss_e = F.binary_cross_entropy_with_logits(edge_pred, edge_label)
         if self.temporal:
-            loss += self.wt * F.mse_loss(t_, t / (self.t_max - self.t_min))
+            loss_t = F.mse_loss(t_, t / (self.t_max - self.t_min))
+        else:
+            loss_t = 0
         if self.etypes > 1:
-            loss += self.wp * F.cross_entropy(p_, p)
-        return torch.mean(loss)
+            loss_p = F.cross_entropy(p_, p)
+        else:
+            loss_p = 0
+        loss = loss_x + self.we * loss_e + self.wt * loss_t, self.wp * loss_p
+        if self.verbose:
+            print(loss_x.item(), loss_e.item(), loss_t.item(), loss_p.item())
+        return loss
