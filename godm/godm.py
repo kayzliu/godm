@@ -121,6 +121,7 @@ class GODM(BaseTransform):
                  wd=0.,
                  batch_size=2048,
                  threshold=0.75,
+                 wx=1.,
                  we=.5,
                  beta=1e-3,
                  wt=1.,
@@ -142,6 +143,7 @@ class GODM(BaseTransform):
         self.wd = wd
         self.batch_size = batch_size
         self.threshold = threshold
+        self.wx = wx
         self.we = we
         self.beta = beta
         self.time_attr = time_attr
@@ -398,8 +400,7 @@ class GODM(BaseTransform):
                     print('Early stopping')
                     break
 
-        if self.diff_epochs > 0:
-            self.dm = torch.load('ckpt/' + self.name + '_dm.pt')
+        self.dm = torch.load('ckpt/' + self.name + '_dm.pt')
         # end_time = time.time()
         # print('Time: ', end_time - start_time)
 
@@ -438,7 +439,8 @@ class GODM(BaseTransform):
             loss_p = F.cross_entropy(p_, p)
         else:
             loss_p = 0
-        loss = loss_x + self.we * loss_e + self.wt * loss_t, self.wp * loss_p
+        loss = (self.wx * loss_x + self.we * loss_e +
+                self.wt * loss_t + self.wp * loss_p)
         if self.verbose:
             print(loss_x.item(), loss_e.item(), loss_t.item(), loss_p.item())
         return loss
