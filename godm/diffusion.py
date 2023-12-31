@@ -1,6 +1,7 @@
+# Modified from https://github.com/amazon-science/tabsyn
+
 from typing import Callable, Union
 import math
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -177,7 +178,6 @@ class Precond(nn.Module):
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
         self.sigma_data = sigma_data
-        ###########
         self.denoise_fn_F = denoise_fn
 
     def forward(self, x, sigma, labels):

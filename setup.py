@@ -38,7 +38,7 @@ setup(name='godm',
       install_requires=requirements,
       setup_requires=['setuptools>=58.2.0'],
       classifiers=[
-          'Development Status :: 1 - Planning',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: Education',
           'Intended Audience :: Financial and Insurance Industry',
           'Intended Audience :: Science/Research',
