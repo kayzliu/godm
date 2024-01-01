@@ -282,6 +282,8 @@ class GODM(BaseTransform):
         return data
 
     def train_ae(self, dataloader):
+        if self.verbose:
+            print('Training autoencoder ...')
         optimizer = torch.optim.Adam(self.ae.parameters(),
                                      lr=self.lr,
                                      weight_decay=self.wd)
@@ -338,16 +340,20 @@ class GODM(BaseTransform):
             else:
                 patience += 1
                 if patience == self.patience:
-                    print('Early stopping')
+                    if self.verbose:
+                        print('Early stopping')
                     break
 
             epoch_t = time.time() - start
-            print(f'Epoch: {epoch:03d}, Loss: {curr_loss:.6f}, '
-                  f'Time: {epoch_t:.4f}')
+            if self.verbose:
+                print(f'Epoch: {epoch:03d}, Loss: {curr_loss:.6f}, '
+                      f'Time: {epoch_t:.4f}')
 
         self.ae = torch.load('ckpt/' + self.name + '_ae.pt')
 
     def train_dm(self, dataloader):
+        if self.verbose:
+            print('Training diffusion model ...')
         optimizer = torch.optim.Adam(self.dm.parameters(), lr=self.lr,
                                      weight_decay=self.wd)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.9,
@@ -358,7 +364,8 @@ class GODM(BaseTransform):
         patience = 0
         # start_time = time.time()
         for epoch in range(self.diff_epochs):
-            pbar = tqdm.tqdm(dataloader, total=len(dataloader))
+            pbar = tqdm.tqdm(dataloader, total=len(dataloader),
+                             disable=~self.verbose)
             pbar.set_description(f"Epoch {epoch}")
 
             batch_loss = 0.0
@@ -397,7 +404,8 @@ class GODM(BaseTransform):
             else:
                 patience += 1
                 if patience == self.patience:
-                    print('Early stopping')
+                    if self.verbose:
+                        print('Early stopping')
                     break
 
         self.dm = torch.load('ckpt/' + self.name + '_dm.pt')

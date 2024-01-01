@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/godm.svg)](https://badge.fury.io/py/godm)
 
-GODM is a data augmentation package for supervised graph outlier detection. It generates synthetic graph outliers with latent diffusion models. This is the official implementation of [Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models](https://arxiv.org/abs/2312.00000). For reproducibility, please see the ```exp``` folder.
+GODM is a data augmentation package for supervised graph outlier detection. It generates synthetic graph outliers with latent diffusion models. This is the official implementation of [Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models](https://arxiv.org/abs/2312.17679).
 
 <p align="center">
 <img src="modelfig.png"  alt="model architecture"/>
@@ -60,17 +60,17 @@ detector(aug_data)        # train on data
 
 ## Cite Us:
 
-Our [paper](https://arxiv.org/abs/2312.00000) is publicly available. If you use GODM in a scientific publication, we would appreciate your citations:
+Our [paper](https://arxiv.org/abs/2312.17679) is publicly available. If you use GODM in a scientific publication, we would appreciate your citations:
 
     @article{liu2023data,
       title={Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models},
       author={Liu, Kay and Zhang, Hengrui and Hu, Ziqing and Wang, Fangxin and Yu, Philip S.},
-      journal={arXiv preprint arXiv:2312.00000},
+      journal={arXiv preprint arXiv:2312.17679},
       year={2023}
     }
 
 or:
 
-    Liu, K., Zhang, H., Hu, Z., Wang, F., and Yu, P.S. 2023. Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models. arXiv preprint arXiv:2312.00000.
+    Liu, K., Zhang, H., Hu, Z., Wang, F., and Yu, P.S. 2023. Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models. arXiv preprint arXiv:2312.17679.
     
 ## 
