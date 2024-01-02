@@ -56,7 +56,7 @@ detector(aug_data)        # train on data
 - ```gen_nodes``` (type: `int`, default: `None`): number of nodes to generate. `None` means the same as the number of outliers in the original graph.
 - ```sample_steps``` (type: `int`, default: `50`): number of steps for diffusion model sampling.
 - ```device``` (type: `int`, default: `0`): GPU index, set to -1 for CPU.
-- ```verbose``` (type: `bool`, default: `False`): verbose mode.
+- ```verbose``` (type: `bool`, default: `False`): verbose mode, enable for logging.
 
 ## Cite Us:
 

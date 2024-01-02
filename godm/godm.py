@@ -172,7 +172,8 @@ class GODM(BaseTransform):
         data = self.preprocess(data)
 
         cluster_data = ClusterData(data,
-                                   num_parts=data.num_nodes // self.batch_size)
+                                   num_parts=data.num_nodes // self.batch_size,
+                                   log=self.verbose)
         dataloader = ClusterLoader(cluster_data, batch_size=1, shuffle=True,
                                    num_workers=4)
 
@@ -357,7 +358,7 @@ class GODM(BaseTransform):
         optimizer = torch.optim.Adam(self.dm.parameters(), lr=self.lr,
                                      weight_decay=self.wd)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.9,
-                                      patience=20, verbose=True)
+                                      patience=20, verbose=self.verbose)
 
         self.dm.train()
         best_loss = float('inf')
@@ -438,17 +439,24 @@ class GODM(BaseTransform):
     def recon_loss(self, x, x_, edge_label, edge_pred,
                    t=None, t_=None, p=None, p_=None):
         loss_x = F.mse_loss(x_, x)
+        if self.verbose:
+            print(loss_x.item(), end=' ')
         loss_e = F.binary_cross_entropy_with_logits(edge_pred, edge_label)
+        if self.verbose:
+            print(loss_e.item(), end=' ')
         if self.temporal:
             loss_t = F.mse_loss(t_, t / (self.t_max - self.t_min))
+            if self.verbose:
+                print(loss_t.item(), end=' ')
         else:
             loss_t = 0
         if self.etypes > 1:
             loss_p = F.cross_entropy(p_, p)
+            if self.verbose:
+                print(loss_p.item(), end=' ')
         else:
             loss_p = 0
         loss = (self.wx * loss_x + self.we * loss_e +
                 self.wt * loss_t + self.wp * loss_p)
-        if self.verbose:
-            print(loss_x.item(), loss_e.item(), loss_t.item(), loss_p.item())
+        print()
         return loss
