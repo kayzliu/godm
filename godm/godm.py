@@ -167,7 +167,7 @@ class GODM(BaseTransform):
         self.t_min = None
         self.t_max = None
 
-    def __call__(self, data):
+    def forward(self, data):
         self.arg_parse(data)
         data = self.preprocess(data)
 
@@ -219,10 +219,14 @@ class GODM(BaseTransform):
             raise TypeError('data must be torch_geometric.data.Data')
 
         if not hasattr(data, 'x'):
-            raise ValueError('data must have feature x')
+            raise ValueError('data must has feature x')
 
         if not hasattr(data, 'y'):
-            raise ValueError('data must have label y')
+            raise ValueError('data must has label y')
+
+        if not hasattr(data, 'train_mask') or not hasattr(data, 'val_mask') \
+                or not hasattr(data, 'test_mask'):
+            raise ValueError('data must has train_mask, val_mask, test_mask')
 
         if self.hid_dim is None:
             self.hid_dim = 2 ** int(math.log2(data.x.size(1)) - 1)
@@ -437,7 +441,8 @@ class GODM(BaseTransform):
                    t=None, t_=None, p=None, p_=None):
         loss_x = F.mse_loss(x_, x)
         if self.verbose:
-            print("Batch Loss: feature: {:.4f}".format(loss_x.item()), end=' ')
+            print("    Batch Loss: feature: {:.4f}".format(loss_x.item()),
+                  end=' ')
         loss_e = F.binary_cross_entropy_with_logits(edge_pred, edge_label)
         if self.verbose:
             print("time: {:.4f}".format(loss_e.item()), end=' ')
