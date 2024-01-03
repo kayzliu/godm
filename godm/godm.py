@@ -219,14 +219,14 @@ class GODM(BaseTransform):
             raise TypeError('data must be torch_geometric.data.Data')
 
         if not hasattr(data, 'x'):
-            raise ValueError('data must has feature x')
+            raise ValueError('data must have feature x')
 
         if not hasattr(data, 'y'):
-            raise ValueError('data must has label y')
+            raise ValueError('data must have label y')
 
         if not hasattr(data, 'train_mask') or not hasattr(data, 'val_mask') \
                 or not hasattr(data, 'test_mask'):
-            raise ValueError('data must has train_mask, val_mask, test_mask')
+            raise ValueError('data must have train_mask, val_mask, test_mask')
 
         if self.hid_dim is None:
             self.hid_dim = 2 ** int(math.log2(data.x.size(1)) - 1)

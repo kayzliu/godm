@@ -35,6 +35,19 @@ aug_data = godm(data)     # augment data
 detector(aug_data)        # train on data
 ```
 
+The input data should be [`torch_geometric.Data`](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.data.Data.html#torch_geometric.data.Data) object with the following keys:
+
+- `x`: node features,
+- `edge_index`: edge index, 
+- `edge_time`: edge times (optional, name can be changed by `time_attr`),
+- `edge_type`: edge types (optional, name can be changed by `type_attr`), 
+- `y`: node labels, 
+- `train_mask`: training node mask, 
+- `val_mask`: validation node mask, 
+- `test_mask`: testing node mask.
+
+So far, no additional keys is allowed. We may support more keys by padding in the future.
+
 ## Parameters
 
 - ```hid_dim``` (type: `int`, default: `None`): hidden dimension for VAE, i.e., latent embedding dimension. `None` means the largest power of 2 that is less than or equal to the feature dimension divided by two.
