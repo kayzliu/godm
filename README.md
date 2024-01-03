@@ -5,7 +5,7 @@
 GODM is a data augmentation package for supervised graph outlier detection. It generates synthetic graph outliers with latent diffusion models. This is the official implementation of [Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models](https://arxiv.org/abs/2312.17679).
 
 <p align="center">
-<img src="modelfig.png"  alt="model architecture"/>
+<img src="https://raw.githubusercontent.com/kayzliu/godm/master/modelfig.png"  alt="model architecture"/>
 </p>
 
 ## Installation
