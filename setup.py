@@ -24,7 +24,7 @@ with open(path.join(this_directory, 'requirements.txt'),
 
 setup(name='godm',
       version=__version__,
-      description='GODM',
+      description='Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models',
       long_description=readme(),
       long_description_content_type='text/markdown',
       author='kayzliu',

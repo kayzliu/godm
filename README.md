@@ -22,6 +22,8 @@ cd pygod
 pip install .
 ```
 
+If you have trouble installing `metis`, take a look at [this tutorial](https://medium.com/@beppe2hd/a-simple-guide-to-set-up-pyg-with-metis-support-on-mac-and-linux-378e833d4de3).
+
 ## Usage
 
 ```python
