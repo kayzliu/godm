@@ -77,15 +77,23 @@ So far, no additional keys is allowed. We may support more keys by padding in th
 
 Our [paper](https://arxiv.org/abs/2312.17679) is publicly available. If you use GODM in a scientific publication, we would appreciate your citations:
 
-    @article{liu2023data,
-      title={Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models},
+    @InProceedings{pmlr-v269-liu25b,
+      title={Data Augmentation for Supervised Graph Outlier Detection via Latent Diffusion Models},
       author={Liu, Kay and Zhang, Hengrui and Hu, Ziqing and Wang, Fangxin and Yu, Philip S.},
-      journal={arXiv preprint arXiv:2312.17679},
-      year={2023}
+      booktitle={Proceedings of the Third Learning on Graphs Conference},
+      pages={43:1--43:20},
+      year={2025},
+      editor={Wolf, Guy and Krishnaswamy, Smita},
+      volume={269},
+      series={Proceedings of Machine Learning Research},
+      month={26--29 Nov},
+      publisher={PMLR},
+      pdf={https://raw.githubusercontent.com/mlresearch/v269/main/assets/liu25b/liu25b.pdf},
+      url={https://proceedings.mlr.press/v269/liu25b.html}
     }
 
 or:
 
-    Liu, K., Zhang, H., Hu, Z., Wang, F., and Yu, P.S. 2023. Data Augmentation for Supervised Graph Outlier Detection with Latent Diffusion Models. arXiv preprint arXiv:2312.17679.
+    Liu, Kay, Hengrui Zhang, Ziqing Hu, Fangxin Wang, Philip S. Yu. "Data Augmentation for Supervised Graph Outlier Detection via Latent Diffusion Models." Proceedings of the Third Learning on Graphs Conference, PMLR 269:43:1-43:20, 2025.
     
 ## 
